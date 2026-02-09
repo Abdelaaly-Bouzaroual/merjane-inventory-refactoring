@@ -46,4 +46,23 @@ public class ProductService {
             pr.save(p);
         }
     }
+
+    public void processProduct(Product p) {
+        if (p == null || p.getType() == null) return;
+        switch (p.getType()) {
+            case "NORMAL" -> handleNormalProduct(p);
+            case "SEASONAL" -> handleSeasonalProduct(p);
+            case "EXPIRABLE" -> handleExpiredProduct(p);
+            default -> System.out.println("Type inconnu : " + p.getType());
+        }
+    }
+
+    private void handleNormalProduct(Product p) {
+        if (p.getAvailable() > 0) {
+            p.setAvailable(p.getAvailable() - 1);
+            pr.save(p);
+        } else if (p.getLeadTime() > 0) {
+            notifyDelay(p.getLeadTime(), p);
+        }
+    }
 }
