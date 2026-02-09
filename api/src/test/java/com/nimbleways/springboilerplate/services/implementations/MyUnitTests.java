@@ -42,4 +42,27 @@ public class MyUnitTests {
         Mockito.verify(productRepository, Mockito.times(1)).save(product);
         Mockito.verify(notificationService, Mockito.times(1)).sendDelayNotification(product.getLeadTime(), product.getName());
     }
+
+
+    @Test
+    public void handleSeasonalProduct_WhenReorderIsAfterSeason_ShouldNotifyOutOfStock() {
+        // GIVEN : Un produit qui n'est plus en stock
+        // Fin de saison dans 5 jours, mais délai de réappro de 10 jours
+        LocalDate seasonEnd = LocalDate.now().plusDays(5);
+        Product product = new Product();
+        product.setName("Pastèque");
+        product.setType("SEASONAL");
+        product.setAvailable(0);
+        product.setLeadTime(10);
+        product.setSeasonStartDate(LocalDate.now().minusDays(10));
+        product.setSeasonEndDate(seasonEnd);
+
+        // WHEN
+        productService.handleSeasonalProduct(product);
+
+        // THEN : Doit être marqué indisponible et notifier le client
+        assertEquals(0, product.getAvailable());
+        Mockito.verify(notificationService).sendOutOfStockNotification("Pastèque");
+        Mockito.verify(productRepository).save(product);
+    }
 }

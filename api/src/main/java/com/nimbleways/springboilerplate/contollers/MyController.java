@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/orders")
@@ -38,12 +39,13 @@ public class MyController {
     @PostMapping("{orderId}/processOrder")
     @ResponseStatus(HttpStatus.OK)
     public ProcessOrderResponse processOrder(@PathVariable Long orderId) {
-        Order order = or.findById(orderId).orElseThrow();
+        Order order = or.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Set<Product> products = order.getItems();
-        for (Product p : products) {
+        for (Product p : order.getItems()) {
             ps.processProduct(p);
         }
+
         return new ProcessOrderResponse(order.getId());
     }
 }
