@@ -39,13 +39,11 @@ public class MyController {
     @PostMapping("{orderId}/processOrder")
     @ResponseStatus(HttpStatus.OK)
     public ProcessOrderResponse processOrder(@PathVariable Long orderId) {
-        Order order = or.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        for (Product p : order.getItems()) {
-            ps.processProduct(p);
-        }
-
-        return new ProcessOrderResponse(order.getId());
+        return or.findById(orderId)
+                .map(order -> {
+                    order.getItems().forEach(ps::processProduct);
+                    return new ProcessOrderResponse(order.getId());
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
     }
 }
