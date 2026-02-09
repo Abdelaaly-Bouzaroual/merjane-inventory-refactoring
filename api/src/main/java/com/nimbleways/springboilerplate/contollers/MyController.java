@@ -44,6 +44,6 @@ public class MyController {
                     order.getItems().forEach(ps::processProduct);
                     return new ProcessOrderResponse(order.getId());
                 })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 }
