@@ -26,17 +26,14 @@ public class ProductService {
     public void handleSeasonalProduct(Product p) {
         LocalDate today = LocalDate.now();
 
-        // Règle métier : On est dans la période de vente
         boolean isWithinSeason = !today.isBefore(p.getSeasonStartDate()) && !today.isAfter(p.getSeasonEndDate());
 
-        // Cas nominal : En saison et en stock
         if (isWithinSeason && p.getAvailable() > 0) {
             p.setAvailable(p.getAvailable() - 1);
             pr.save(p);
             return;
         }
 
-        // Cas de rupture ou hors saison : calcul du réapprovisionnement
         LocalDate arrivalDate = today.plusDays(p.getLeadTime());
         boolean willArriveAfterSeason = arrivalDate.isAfter(p.getSeasonEndDate());
 
@@ -50,14 +47,15 @@ public class ProductService {
     }
 
     public void handleExpiredProduct(Product p) {
-        if (p.getAvailable() > 0 && p.getExpiryDate().isAfter(LocalDate.now())) {
+        boolean isExpired = !p.getExpiryDate().isAfter(LocalDate.now());
+
+        if (p.getAvailable() > 0 && !isExpired) {
             p.setAvailable(p.getAvailable() - 1);
-            pr.save(p);
         } else {
             ns.sendExpirationNotification(p.getName(), p.getExpiryDate());
             p.setAvailable(0);
-            pr.save(p);
         }
+        pr.save(p);
     }
 
     public void processProduct(Product p) {
